@@ -123,14 +123,26 @@ class _MyHomePageState extends State<MyHomePage> {
       right: 0,
       child: Center(
         child: ElevatedButton.icon(
-          onPressed: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const ScanPage(),
-        ),
-      );
-  },
+          onPressed: () async {
+                    // 1. Open the scanner and wait for the result
+                    final scannedCode = await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ScanPage()),
+                    );
+
+                    // 2. If we got a result, REPLACE the current view with Profile
+                    // This ensures the "back" button goes to Map, not the Scanner.
+                    if (scannedCode != null && context.mounted) {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProfilePage(
+                            scannedCode: scannedCode.toString(),
+                          ),
+                        ),
+                      );
+                    }
+                  },
           icon: const Icon(Icons.qr_code_scanner),
           label: const Text("Scan"),
         ),
