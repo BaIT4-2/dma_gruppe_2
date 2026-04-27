@@ -1,4 +1,4 @@
-name: dma_gruppe_2
+name: PicFindR
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -37,27 +37,32 @@ dependencies:
   flutter_osm_plugin: ^1.4.3
   mobile_scanner: ^7.2.0
   shared_preferences: ^2.5.5
-  flutter_launcher_icons: ^0.13.1
+  geolocator: ^14.0.2
+
+
+
+
+
+
+
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
+  flutter_launcher_icons: ^0.14.4
+  flutter_lints: ^6.0.0
 
-flutter_launcher_icons:
-  android: "launcher_icon"
+
+flutter_icons:
+  android: true
   ios: true
-  image_path: "/Pics/rtard.png"
-  min_sdk_android: 21 # android min sdk min:16, default 21
-  web:
-    generate: true
-    image_path: "path/to/image.png"
-  windows:
-    generate: true
-    image_path: "path/to/image.png"
-    icon_size: 48 # min:48, max:256, default: 48
-  macos:
-    generate: true
-    image_path: "path/to/image.png"
+  image_path: "Pics/logo.png"
+  image_path_android: "Pics/logo.png"
+  image_path_ios: "Pics/logo.png"
+  min_sdk_android: 21
+
+
 
     
 

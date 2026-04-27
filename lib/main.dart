@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_osm_plugin/flutter_osm_plugin.dart';
 import 'profile_page.dart';
 import 'scan.dart';
+import 'package:geolocator/geolocator.dart';
 
 void main() {
   runApp(const MyApp());
@@ -59,37 +60,94 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
-  // map controller is initialized here as we need it in initState
-  MapController mc = MapController(
-    initPosition: GeoPoint(latitude: 57.0, longitude: 10.0),
+  MapController? mc;
+
+  Future<Position> _determinePosition() async {
+  bool serviceEnabled;
+  LocationPermission permission;
+
+  // Test if location services are enabled.
+  serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  if (!serviceEnabled) {
+    // Location services are not enabled don't continue
+    // accessing the position and request users of the 
+    // App to enable the location services.
+    return Future.error('Location services are disabled.');
+  }
+
+  permission = await Geolocator.checkPermission();
+  if (permission == LocationPermission.denied) {
+    permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied) {
+      // Permissions are denied, next time you could try
+      // requesting permissions again (this is also where
+      // Android's shouldShowRequestPermissionRationale 
+      // returned true. According to Android guidelines
+      // your App should show an explanatory UI now.
+      return Future.error('Location permissions are denied');
+    }
+  }
+  
+  if (permission == LocationPermission.deniedForever) {
+    // Permissions are denied forever, handle appropriately. 
+    return Future.error(
+      'Location permissions are permanently denied, we cannot request permissions.');
+  } 
+
+  // When we reach here, permissions are granted and we can
+  // continue accessing the position of the device.
+  return await Geolocator.getCurrentPosition();
+}
+
+  Future<void> _initMap() async {
+  final position = await _determinePosition();
+
+  mc = MapController(
+    initPosition: GeoPoint(
+      latitude: position.latitude,
+      longitude: position.longitude,
+    ),
   );
 
-  // create a suitable marker icon
-  Icon marker = Icon(Icons.place, size: 50);
+  if (mounted) {
+    setState(() {});
+  }
+}
+  
+
+  Icon marker = Icon(Icons.place, size: 50, color: Colors.red);
 
   @override
   void initState() {
     super.initState();
 
-    // add a long press listener to the map
-    mc.listenerMapLongTapping.addListener(() {
-      // get the pressed location (if available)
-      GeoPoint? p = mc.listenerMapLongTapping.value;
-      if (p == null) return;
+    _initMap();
 
-      // add marker at location p
-      mc.addMarker(
-        p,
+  }
+
+  // Your helper method stays exactly the same
+  Future<void> _addHardcodedMarkers() async {
+    List<GeoPoint> myMarkers = [
+      GeoPoint(latitude: 57.0488, longitude: 9.9217), 
+      GeoPoint(latitude: 57.0425, longitude: 9.9189), 
+      GeoPoint(latitude: 57.0288, longitude: 9.9535), 
+      GeoPoint(latitude: 57.0238, longitude: 9.9335), 
+    ];
+
+    for (GeoPoint point in myMarkers) {
+      await mc?.addMarker(
+        point,
         markerIcon: MarkerIcon(icon: marker),
         iconAnchor: IconAnchor(anchor: Anchor.top),
       );
-    });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+
+  
     // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
     //
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
@@ -105,17 +163,22 @@ class _MyHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
+      body: mc == null
+    ? const Center(child: CircularProgressIndicator())
+    : Center(
         child: Stack(
   children: [
     OSMFlutter(
+      onMapIsReady: (isReady) {
+                if (isReady) {
+                  _addHardcodedMarkers();
+                }
+              },
       onGeoPointClicked: (value) {
         print(value);
       },
-      controller: mc,
-      osmOption: OSMOption(zoomOption: ZoomOption(initZoom: 10)),
+      controller: mc!,
+      osmOption: OSMOption(zoomOption: ZoomOption(initZoom: 12.3)),
     ),
     Positioned(
       bottom: 20,
